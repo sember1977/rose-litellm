@@ -6,26 +6,70 @@ model_list:
       api_base: http://host.docker.internal:11434
       extra_body:
         think: false
+    model_info:
+      mode: chat
+      supports_vision: true
+      supports_function_calling: true
+      supports_parallel_function_calling: true
+      supports_tool_choice: true
+      supports_system_messages: true
+      supports_response_schema: true
+      max_tokens: 32768
+      max_input_tokens: 32768
+      max_output_tokens: 8192
+      input_cost_per_token: 0.0
+      output_cost_per_token: 0.0
 
-  # qwen3.6 mit sichtbarem Thinking — langsamer, Reasoning sichtbar
+  # qwen3.6 mit sichtbarem Thinking
   - model_name: qwen3.6-think
     litellm_params:
       model: ollama/qwen3.6:35b-a3b-q4_K_M
       api_base: http://host.docker.internal:11434
       extra_body:
         think: true
+    model_info:
+      mode: chat
+      supports_vision: true
+      supports_function_calling: true
+      supports_parallel_function_calling: true
+      supports_tool_choice: true
+      supports_system_messages: true
+      supports_response_schema: true
+      supports_reasoning: true
+      max_tokens: 32768
+      max_input_tokens: 32768
+      max_output_tokens: 8192
+      input_cost_per_token: 0.0
+      output_cost_per_token: 0.0
 
-  # qwen3-coder — unterstuetzt kein think
+  # qwen3-coder — Code-Generierung
   - model_name: qwen3-coder
     litellm_params:
       model: ollama/qwen3-coder:30b
       api_base: http://host.docker.internal:11434
+    model_info:
+      mode: chat
+      supports_vision: false
+      supports_function_calling: true
+      supports_parallel_function_calling: true
+      supports_tool_choice: true
+      supports_system_messages: true
+      max_tokens: 32768
+      max_input_tokens: 32768
+      max_output_tokens: 8192
+      input_cost_per_token: 0.0
+      output_cost_per_token: 0.0
 
   # Embeddings
   - model_name: nomic-embed
     litellm_params:
       model: ollama/nomic-embed-text:latest
       api_base: http://host.docker.internal:11434
+    model_info:
+      mode: embedding
+      max_input_tokens: 8192
+      output_vector_size: 768
+      input_cost_per_token: 0.0
 
 litellm_settings:
   drop_params: true

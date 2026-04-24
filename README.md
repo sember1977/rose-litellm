@@ -139,6 +139,29 @@ model_list:
 
 Dann `docker compose restart litellm`.
 
+### Capabilities (was koennen die Modelle?)
+
+LiteLLM meldet pro Modell Fähigkeiten via `/model/info`. Clients wie Chatbox, Continue oder Zed lesen das aus und aktivieren z. B. den Foto-Upload-Button nur bei Vision-fähigen Modellen.
+
+| Alias | Vision (Bilder) | Function-Calling | Thinking/Reasoning | Max Input |
+|---|---|---|---|---|
+| `qwen3.6` | ✓ | ✓ | — (aus) | 32k |
+| `qwen3.6-think` | ✓ | ✓ | ✓ (sichtbar) | 32k |
+| `qwen3-coder` | — | ✓ | — | 32k |
+| `nomic-embed` | — | — | — | 8k |
+
+**Bilder:** Kamerafoto oder Screenshot wird als base64 im Message-Content mitgeschickt — funktioniert mit `qwen3.6`/`qwen3.6-think` (Ollama-Capability `vision` ist aktiv).
+
+**PDFs:** Im OpenAI-Schema gibt es dafuer kein eigenes Flag. In der Praxis:
+- Die meisten Clients (Chatbox, Continue, Zed) extrahieren Text **clientseitig** und schicken ihn als Text-Nachricht → funktioniert mit jedem Modell, nichts zu konfigurieren.
+- Manche Clients rendern PDF-Seiten zu Bildern → greift auf `supports_vision` zurueck, also auch abgedeckt.
+
+Capabilities werden in `litellm_config.yaml` pro Modell unter `model_info:` gesetzt (`supports_vision`, `supports_function_calling`, `supports_reasoning`, `max_input_tokens`, …). Verifikation:
+
+```bash
+curl -s -H "Authorization: Bearer $MASTER_KEY" http://127.0.0.1:4000/model/info | jq '.data[] | {name:.model_name, vision:.model_info.supports_vision, func:.model_info.supports_function_calling}'
+```
+
 ---
 
 ## API-Keys verwalten
