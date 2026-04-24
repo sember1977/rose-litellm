@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Rose LiteLLM Admin</title>
+<link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+<header>
+  <h1>Rose LiteLLM Admin</h1>
+  <p class="sub">Lokale Verwaltung · Nur im LAN erreichbar</p>
+</header>
+
+<main>
+
+<section class="card">
+  <h2>Status</h2>
+  <div id="status-box" class="kv">
+    <span class="k">Service</span><span id="status-health" class="v">laedt…</span>
+    <span class="k">Version</span><span id="status-version" class="v">—</span>
+    <span class="k">Modelle</span><span id="status-models" class="v">—</span>
+  </div>
+</section>
+
+<section class="card">
+  <h2>Wie verbinden sich Tools?</h2>
+  <p class="hint">Konfiguriere in <code>Continue.dev</code> / <code>Aider</code> / <code>Cursor</code> / <code>Zed</code> folgendes:</p>
+  <div class="conn-block">
+    <div class="kv">
+      <span class="k">API Base</span>
+      <span class="v"><code id="apibase">https://www.sember.de/llm/v1</code> <button class="copy" data-copy="#apibase">kopieren</button></span>
+      <span class="k">API Key</span><span class="v">siehe unten (Neuer Key)</span>
+      <span class="k">Model-IDs</span><span class="v" id="model-ids">—</span>
+    </div>
+  </div>
+
+  <details class="examples">
+    <summary>Beispiel-Configs + curl</summary>
+
+    <h3>Continue.dev (<code>~/.continue/config.json</code>)</h3>
+    <pre id="example-continue"></pre>
+    <button class="copy" data-copy="#example-continue">kopieren</button>
+
+    <h3>Aider (CLI)</h3>
+    <pre id="example-aider"></pre>
+    <button class="copy" data-copy="#example-aider">kopieren</button>
+
+    <h3>Zed (<code>settings.json</code>)</h3>
+    <pre id="example-zed"></pre>
+    <button class="copy" data-copy="#example-zed">kopieren</button>
+
+    <h3>curl Smoke-Test</h3>
+    <pre id="example-curl"></pre>
+    <button class="copy" data-copy="#example-curl">kopieren</button>
+  </details>
+</section>
+
+<section class="card">
+  <h2>Neuer Key</h2>
+  <form id="key-form" class="grid">
+    <label>Name <input id="f-alias" placeholder="z.B. Continue@Laptop" required /></label>
+    <label>Erlaubte Modelle
+      <select id="f-models" multiple size="3">
+      </select>
+    </label>
+    <label>Requests/min <input id="f-rpm" type="number" value="60" min="1" /></label>
+    <label>Laufzeit <input id="f-dur" placeholder="z.B. 30d, leer = unbegrenzt" /></label>
+    <button type="submit">Key erstellen</button>
+  </form>
+
+  <div id="new-key-result" class="hidden">
+    <p class="warn">WICHTIG: Key wird nur diesmal angezeigt. Kopieren und sicher speichern.</p>
+    <div class="keyout">
+      <code id="new-key-text"></code>
+      <button class="copy" data-copy="#new-key-text">kopieren</button>
+    </div>
+  </div>
+</section>
+
+<section class="card">
+  <h2>Keys (aktuell bekannt)</h2>
+  <p class="hint">Hinweis: LiteLLM laeuft ohne Datenbank — erstellte Keys bleiben nur in LiteLLMs RAM. Nach Neustart gelten neue Aliasse. Der Master-Key bleibt immer gueltig.</p>
+  <ul id="keys-list"></ul>
+</section>
+
+</main>
+
+<footer>
+  <p>Rose LiteLLM Admin · Nur LAN · <a href="https://github.com/BerriAI/litellm" target="_blank">LiteLLM Docs</a></p>
+</footer>
+
+<script src="/static/app.js"></script>
+</body>
+</html>

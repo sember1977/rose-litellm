@@ -1,0 +1,36 @@
+model_list:
+  # qwen3.6 ohne Thinking — schnelle Antworten (Default fuer alle Tools)
+  - model_name: qwen3.6
+    litellm_params:
+      model: ollama/qwen3.6:35b-a3b-q4_K_M
+      api_base: http://host.docker.internal:11434
+      extra_body:
+        think: false
+
+  # qwen3.6 mit sichtbarem Thinking — langsamer, Reasoning sichtbar
+  - model_name: qwen3.6-think
+    litellm_params:
+      model: ollama/qwen3.6:35b-a3b-q4_K_M
+      api_base: http://host.docker.internal:11434
+      extra_body:
+        think: true
+
+  # qwen3-coder — unterstuetzt kein think
+  - model_name: qwen3-coder
+    litellm_params:
+      model: ollama/qwen3-coder:30b
+      api_base: http://host.docker.internal:11434
+
+  # Embeddings
+  - model_name: nomic-embed
+    litellm_params:
+      model: ollama/nomic-embed-text:latest
+      api_base: http://host.docker.internal:11434
+
+litellm_settings:
+  drop_params: true
+  num_retries: 2
+  request_timeout: 300
+
+general_settings:
+  master_key: os.environ/MASTER_KEY

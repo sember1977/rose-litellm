@@ -1,0 +1,17 @@
+# Secrets
+.env
+.env.local
+
+# Docker volumes (werden von docker compose automatisch verwaltet)
+# nichts lokal zu ignorieren da keine Bind-Mounts
+
+# Python build artifacts
+__pycache__/
+*.pyc
+*.pyo
+
+# Editor
+.vscode/
+.idea/
+*.swp
+.DS_Store
