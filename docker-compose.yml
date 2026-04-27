@@ -28,6 +28,7 @@ services:
       - LITELLM_SALT_KEY=${SALT_KEY}
       - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
       - STORE_MODEL_IN_DB=True
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
     extra_hosts:
       - "host.docker.internal:host-gateway"
     depends_on:

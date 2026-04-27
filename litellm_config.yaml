@@ -71,6 +71,45 @@ model_list:
       output_vector_size: 768
       input_cost_per_token: 0.0
 
+
+  # ── Google Gemini (extern, ueber GEMINI_API_KEY) ────────────────
+  - model_name: gemini-2.5-flash
+    litellm_params:
+      model: gemini/gemini-2.5-flash
+      api_key: os.environ/GEMINI_API_KEY
+    model_info:
+      mode: chat
+      supports_vision: true
+      supports_function_calling: true
+      supports_parallel_function_calling: true
+      supports_tool_choice: true
+      supports_system_messages: true
+      supports_response_schema: true
+      max_tokens: 1048576
+      max_input_tokens: 1048576
+      max_output_tokens: 8192
+      input_cost_per_token: 0.0
+      output_cost_per_token: 0.0
+
+  - model_name: gemini-2.5-pro
+    litellm_params:
+      model: gemini/gemini-2.5-pro
+      api_key: os.environ/GEMINI_API_KEY
+    model_info:
+      mode: chat
+      supports_vision: true
+      supports_function_calling: true
+      supports_parallel_function_calling: true
+      supports_tool_choice: true
+      supports_system_messages: true
+      supports_response_schema: true
+      supports_reasoning: true
+      max_tokens: 2097152
+      max_input_tokens: 2097152
+      max_output_tokens: 8192
+      input_cost_per_token: 0.0
+      output_cost_per_token: 0.0
+
 litellm_settings:
   drop_params: true
   num_retries: 2
