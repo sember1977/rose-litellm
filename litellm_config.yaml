@@ -2,10 +2,9 @@ model_list:
   # qwen3.6 ohne Thinking — schnelle Antworten (Default fuer alle Tools)
   - model_name: qwen3.6
     litellm_params:
-      model: ollama/qwen3.6:35b-a3b-q4_K_M
-      api_base: http://host.docker.internal:11434
-      extra_body:
-        think: false
+      model: openai/qwen3-next
+      api_base: http://192.168.1.155:8014/v1
+      api_key: dummy-vllm-no-auth
     model_info:
       mode: chat
       supports_vision: true
@@ -19,14 +18,11 @@ model_list:
       max_output_tokens: 8192
       input_cost_per_token: 0.0
       output_cost_per_token: 0.0
-
-  # qwen3.6 mit sichtbarem Thinking
-  - model_name: qwen3.6-think
+  - model_name: qwen3.6-vibe
     litellm_params:
-      model: ollama/qwen3.6:35b-a3b-q4_K_M
-      api_base: http://host.docker.internal:11434
-      extra_body:
-        think: true
+      model: openai/qwen3-next
+      api_base: http://192.168.1.155:8014/v1
+      api_key: dummy-vllm-no-auth
     model_info:
       mode: chat
       supports_vision: true
@@ -35,25 +31,6 @@ model_list:
       supports_tool_choice: true
       supports_system_messages: true
       supports_response_schema: true
-      supports_reasoning: true
-      max_tokens: 32768
-      max_input_tokens: 32768
-      max_output_tokens: 8192
-      input_cost_per_token: 0.0
-      output_cost_per_token: 0.0
-
-  # qwen3-coder — Code-Generierung
-  - model_name: qwen3-coder
-    litellm_params:
-      model: ollama/qwen3-coder:30b
-      api_base: http://host.docker.internal:11434
-    model_info:
-      mode: chat
-      supports_vision: false
-      supports_function_calling: true
-      supports_parallel_function_calling: true
-      supports_tool_choice: true
-      supports_system_messages: true
       max_tokens: 32768
       max_input_tokens: 32768
       max_output_tokens: 8192
@@ -63,37 +40,19 @@ model_list:
   # Embeddings
   - model_name: nomic-embed
     litellm_params:
-      model: ollama/nomic-embed-text:latest
-      api_base: http://host.docker.internal:11434
+      model: openai/nomic-embed
+      api_base: http://192.168.1.155:8013/v1
+      api_key: dummy-vllm-no-auth
+      encoding_format: float
     model_info:
       mode: embedding
       max_input_tokens: 8192
       output_vector_size: 768
       input_cost_per_token: 0.0
 
-
-  # ── Google Gemini (extern, ueber GEMINI_API_KEY) ────────────────
-  - model_name: gemini-2.5-flash
+  - model_name: gemini-pro-latest
     litellm_params:
-      model: gemini/gemini-2.5-flash
-      api_key: os.environ/GEMINI_API_KEY
-    model_info:
-      mode: chat
-      supports_vision: true
-      supports_function_calling: true
-      supports_parallel_function_calling: true
-      supports_tool_choice: true
-      supports_system_messages: true
-      supports_response_schema: true
-      max_tokens: 1048576
-      max_input_tokens: 1048576
-      max_output_tokens: 8192
-      input_cost_per_token: 0.0
-      output_cost_per_token: 0.0
-
-  - model_name: gemini-2.5-pro
-    litellm_params:
-      model: gemini/gemini-2.5-pro
+      model: gemini/gemini-pro-latest
       api_key: os.environ/GEMINI_API_KEY
     model_info:
       mode: chat
@@ -104,11 +63,68 @@ model_list:
       supports_system_messages: true
       supports_response_schema: true
       supports_reasoning: true
-      max_tokens: 2097152
-      max_input_tokens: 2097152
-      max_output_tokens: 8192
+      max_tokens: 1048576
+      max_input_tokens: 1048576
+      max_output_tokens: 65536
       input_cost_per_token: 0.0
       output_cost_per_token: 0.0
+
+  - model_name: gemini-flash-latest
+    litellm_params:
+      model: gemini/gemini-flash-latest
+      api_key: os.environ/GEMINI_API_KEY
+    model_info:
+      mode: chat
+      supports_vision: true
+      supports_function_calling: true
+      supports_parallel_function_calling: true
+      supports_tool_choice: true
+      supports_system_messages: true
+      supports_response_schema: true
+      supports_reasoning: true
+      max_tokens: 1048576
+      max_input_tokens: 1048576
+      max_output_tokens: 65536
+      input_cost_per_token: 0.0
+      output_cost_per_token: 0.0
+
+
+  # DeepSeek V4-Pro - hoechster Agentic-Score (71.2), 1M Context
+  # 75% Rabatt bis 31.05.2026 -> effektiv $0.11 input / $0.22 output pro M Token
+  - model_name: deepseek-v4-pro
+    litellm_params:
+      model: deepseek/deepseek-v4-pro
+      api_key: os.environ/DEEPSEEK_API_KEY
+    model_info:
+      mode: chat
+      supports_function_calling: true
+      supports_parallel_function_calling: true
+      supports_tool_choice: true
+      supports_system_messages: true
+      supports_response_schema: true
+      max_tokens: 1048576
+      max_input_tokens: 1048576
+      max_output_tokens: 384000
+      input_cost_per_token: 0.000000435
+      output_cost_per_token: 0.00000087
+
+  # DeepSeek V4-Flash - guenstig, hoehe Throughput, fuer Routine
+  - model_name: deepseek-v4-flash
+    litellm_params:
+      model: deepseek/deepseek-v4-flash
+      api_key: os.environ/DEEPSEEK_API_KEY
+    model_info:
+      mode: chat
+      supports_function_calling: true
+      supports_parallel_function_calling: true
+      supports_tool_choice: true
+      supports_system_messages: true
+      max_tokens: 1048576
+      max_input_tokens: 1048576
+      max_output_tokens: 384000
+      input_cost_per_token: 0.00000014
+      output_cost_per_token: 0.00000028
+
 
 litellm_settings:
   drop_params: true

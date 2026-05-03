@@ -20,7 +20,7 @@ services:
     container_name: rose-litellm
     restart: unless-stopped
     ports:
-      - "127.0.0.1:4000:4000"
+      - "4000:4000"
     volumes:
       - ./litellm_config.yaml:/app/config.yaml:ro
     environment:
@@ -29,6 +29,7 @@ services:
       - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
       - STORE_MODEL_IN_DB=True
       - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY}
     extra_hosts:
       - "host.docker.internal:host-gateway"
     depends_on:
