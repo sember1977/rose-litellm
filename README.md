@@ -34,6 +34,8 @@ Internet
               +-----> rose-vllm-next   :8014  (Qwen3-Next-80B-A3B-Instruct-AWQ-4bit)
               +-----> rose-vllm-embed  :8013  (nomic-embed-text-v1.5)
               +-----> Cloud:  Gemini API, DeepSeek API
+              |
+              +-----> chemicals-rag-svc :8021 (RAG-Wrapper -> qwen-chemicals)
 
 +--------------------+
 | rose-litellm-admin |  LAN-only (192.168.1.155:4001)
@@ -50,6 +52,7 @@ Internet
 **Geteilte Backends (laufen NICHT in diesem Compose):**
 - `rose-vllm-next`, `rose-vllm-embed` — eigene Compose-Dateien
 - `rose-qdrant` — Vector-Store (gemeinsam genutzt)
+- `chemicals-rag-svc` — RAG-Service fuer Gefahrstoff-Domain (eigenes Repo: https://github.com/sember1977/chemicals-rag-svc), exponiert das Modell `qwen-chemicals`
 
 ---
 
@@ -64,6 +67,7 @@ Internet
 | `gemini-flash-latest` | Google Gemini Flash | Schnell + guenstig + Vision |
 | `deepseek-v4-pro` | DeepSeek V4-Pro | Hoechster Agentic-Score, 1M context |
 | `deepseek-v4-flash` | DeepSeek V4-Flash | Schnell + guenstig fuer Routine |
+| `qwen-chemicals` | RAG-Wrapper vor `qwen3-next` | Gefahrstoff-Betriebsanweisungen + EMKG-Bewertung (siehe `chemicals-rag-svc`) |
 
 Capabilities (Vision/Function-Calling/Reasoning) und Token-Limits stehen pro
 Modell in `litellm_config.yaml` unter `model_info`. Verifikation:
