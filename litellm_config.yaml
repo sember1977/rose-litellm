@@ -159,6 +159,14 @@ model_list:
       api_key: os.environ/IONOS_API_KEY
       temperature: 0
       top_p: 0.1
+      # IONOS hostet Llama 3.1 ohne korrekt verdrahtete EOT-Token --
+      # Modell labert sonst "assistant\n\n..." weiter. Stop-Sequenzen
+      # zwingen den Schnitt vor dem naechsten Header.
+      stop:
+        - "<|eot_id|>"
+        - "<|end_of_text|>"
+        - "<|start_header_id|>"
+        - "assistant\n\n"
     model_info:
       mode: chat
       supports_function_calling: false
