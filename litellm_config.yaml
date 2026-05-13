@@ -168,6 +168,25 @@ model_list:
       output_cost_per_token: 0.0
 
   # ============================================================
+  # deepseek-flash-Chemicals: gleicher RAG-Code, DeepSeek V4-Flash
+  # als Generation-Backend (China-Host, NICHT fuer Kunden-IP).
+  # ============================================================
+  - model_name: deepseek-flash-Chemicals
+    litellm_params:
+      model: openai/deepseek-flash-Chemicals
+      api_base: http://chemicals-rag-svc-deepseek:8021/v1
+      api_key: dummy
+    model_info:
+      mode: chat
+      supports_function_calling: true
+      supports_system_messages: true
+      max_tokens: 8192
+      max_input_tokens: 32768
+      max_output_tokens: 8192
+      input_cost_per_token: 0.0
+      output_cost_per_token: 0.0
+
+  # ============================================================
   # IONOS AI Model Hub - DSGVO-konformer DE-Host (Frankfurt)
   # Endpoint: https://openai.inference.de-txl.ionos.com/v1
   # Function-Calling-Support unbestaetigt -> erst false, nach Smoke-Test ggf. anheben
