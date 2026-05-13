@@ -30,6 +30,7 @@ services:
       - STORE_MODEL_IN_DB=True
       - GEMINI_API_KEY=${GEMINI_API_KEY}
       - DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY}
+      - IONOS_API_KEY=${IONOS_API_KEY}
     extra_hosts:
       - "host.docker.internal:host-gateway"
     depends_on:

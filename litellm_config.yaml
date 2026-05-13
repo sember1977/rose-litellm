@@ -147,10 +147,30 @@ model_list:
       input_cost_per_token: 0.0
       output_cost_per_token: 0.0
 
+  # ============================================================
+  # IONOS AI Model Hub - DSGVO-konformer DE-Host (Frankfurt)
+  # Endpoint: https://openai.inference.de-txl.ionos.com/v1
+  # Function-Calling-Support unbestaetigt -> erst false, nach Smoke-Test ggf. anheben
+  # ============================================================
+  - model_name: ionos-llama405b
+    litellm_params:
+      model: openai/meta-llama/Meta-Llama-3.1-405B-Instruct-FP8
+      api_base: https://openai.inference.de-txl.ionos.com/v1
+      api_key: os.environ/IONOS_API_KEY
+      temperature: 0
+      top_p: 0.1
+    model_info:
+      mode: chat
+      supports_function_calling: false
+      supports_system_messages: true
+      max_tokens: 8192
+      max_input_tokens: 32768
+      max_output_tokens: 8192
+
 litellm_settings:
   drop_params: true
   num_retries: 2
   request_timeout: 300
 
 general_settings:
-  master_key: os.environ/MASTER_KEY
+  master_key: os.environ/LITELLM_MASTER_KEY
