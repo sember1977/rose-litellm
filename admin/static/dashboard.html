@@ -18,6 +18,16 @@
 
 <main>
 
+<section class="card" id="chart-card">
+  <h2>24h-Verlauf — Requests pro Stunde</h2>
+  <div class="chart-container">
+    <canvas id="timeline-canvas"></canvas>
+  </div>
+  <div id="chart-legend" class="chart-legend"></div>
+  <p id="chart-empty" class="muted hidden">Keine Requests in den letzten 24 Stunden.</p>
+  <p id="chart-error" class="warn hidden"></p>
+</section>
+
 <section class="card">
   <h2>Heute — Nutzung pro Modell</h2>
   <p class="hint" id="today-date">—</p>
@@ -36,6 +46,16 @@
       <tbody>
         <tr><td colspan="6" class="muted">Lade Daten…</td></tr>
       </tbody>
+      <tfoot>
+        <tr id="today-foot">
+          <td></td>
+          <td class="model-name">Gesamt</td>
+          <td class="num" id="today-foot-reqs">—</td>
+          <td class="num" id="today-foot-pt">—</td>
+          <td class="num" id="today-foot-ct">—</td>
+          <td class="num" id="today-foot-spend">—</td>
+        </tr>
+      </tfoot>
     </table>
   </div>
   <p id="today-total" class="hint" style="margin-top:10px;"></p>
@@ -44,6 +64,12 @@
 
 <section class="card">
   <h2>Letzte Requests</h2>
+  <div class="filter-row">
+    <label for="key-filter">Key-Filter:</label>
+    <select id="key-filter">
+      <option value="">Alle Keys</option>
+    </select>
+  </div>
   <div class="table-wrap">
     <table id="recent-table">
       <thead>

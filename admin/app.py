@@ -175,13 +175,15 @@ def dashboard_today():
         rows = cur.fetchall()
         cur.close(); conn.close()
     except Exception as e:
-        return {"models": [], "total_requests": 0, "error": str(e)[:200]}
+        return {"models": [], "total_requests": 0, "total_spend": 0.0, "error": str(e)[:200]}
 
     models = []
     total_requests = 0
+    total_spend = 0.0
     for r in rows:
         model, reqs, pt, ct, spend, last_req, active = r
         total_requests += reqs
+        total_spend += spend
         models.append({
             "model": model,
             "requests": reqs,
@@ -191,25 +193,38 @@ def dashboard_today():
             "last_request_at": last_req.isoformat() if last_req else None,
             "active_last_10min": bool(active),
         })
-    return {"models": models, "total_requests": total_requests}
+    return {"models": models, "total_requests": total_requests, "total_spend": round(total_spend, 6)}
 
 
 @app.get("/api/dashboard/recent")
-def dashboard_recent():
-    """Letzte 20 Requests aus LiteLLM_SpendLogs."""
+def dashboard_recent(key_alias: str | None = None):
+    """Letzte 50 Requests aus LiteLLM_SpendLogs. Optional nach key_alias filterbar."""
     try:
         conn = _db()
         cur = conn.cursor()
-        cur.execute("""
-            SELECT sl."request_id", sl.model, vt.key_alias,
-                   sl.prompt_tokens, sl.completion_tokens, sl.spend,
-                   sl.status, sl."startTime",
-                   EXTRACT(EPOCH FROM (sl."endTime" - sl."startTime")) * 1000 AS duration_ms
-            FROM "LiteLLM_SpendLogs" sl
-            LEFT JOIN "LiteLLM_VerificationToken" vt ON sl.api_key = vt.token
-            ORDER BY sl."startTime" DESC
-            LIMIT 20
-        """)
+        if key_alias:
+            cur.execute("""
+                SELECT sl."request_id", sl.model, vt.key_alias,
+                       sl.prompt_tokens, sl.completion_tokens, sl.spend,
+                       sl.status, sl."startTime",
+                       EXTRACT(EPOCH FROM (sl."endTime" - sl."startTime")) * 1000 AS duration_ms
+                FROM "LiteLLM_SpendLogs" sl
+                LEFT JOIN "LiteLLM_VerificationToken" vt ON sl.api_key = vt.token
+                WHERE vt.key_alias = %s
+                ORDER BY sl."startTime" DESC
+                LIMIT 50
+            """, (key_alias,))
+        else:
+            cur.execute("""
+                SELECT sl."request_id", sl.model, vt.key_alias,
+                       sl.prompt_tokens, sl.completion_tokens, sl.spend,
+                       sl.status, sl."startTime",
+                       EXTRACT(EPOCH FROM (sl."endTime" - sl."startTime")) * 1000 AS duration_ms
+                FROM "LiteLLM_SpendLogs" sl
+                LEFT JOIN "LiteLLM_VerificationToken" vt ON sl.api_key = vt.token
+                ORDER BY sl."startTime" DESC
+                LIMIT 50
+            """)
         rows = cur.fetchall()
         cur.close(); conn.close()
     except Exception as e:
@@ -260,3 +275,72 @@ def dashboard_health():
             "last_request_at": last_req.isoformat() if last_req else None,
         })
     return {"active_models": active_models}
+
+
+@app.get("/api/dashboard/timeline")
+def dashboard_timeline(key_alias: str | None = None):
+    """Request-Counts pro Stunde der letzten 24h, gruppiert nach Modell.
+
+    Optional nach key_alias filterbar — dann zaehlen nur Requests dieses Keys.
+    """
+    try:
+        conn = _db()
+        cur = conn.cursor()
+        if key_alias:
+            cur.execute("""
+                SELECT date_trunc('hour', sl."startTime") AS hour,
+                       sl.model,
+                       COUNT(*)::int AS requests
+                FROM "LiteLLM_SpendLogs" sl
+                JOIN "LiteLLM_VerificationToken" vt ON sl.api_key = vt.token
+                WHERE sl."startTime" >= NOW() - INTERVAL '24 hours'
+                  AND vt.key_alias = %s
+                GROUP BY hour, sl.model
+                ORDER BY hour
+            """, (key_alias,))
+        else:
+            cur.execute("""
+                SELECT date_trunc('hour', sl."startTime") AS hour,
+                       sl.model,
+                       COUNT(*)::int AS requests
+                FROM "LiteLLM_SpendLogs" sl
+                WHERE sl."startTime" >= NOW() - INTERVAL '24 hours'
+                GROUP BY hour, sl.model
+                ORDER BY hour
+            """)
+        rows = cur.fetchall()
+        cur.close(); conn.close()
+    except Exception as e:
+        return {"buckets": [], "models": [], "error": str(e)[:200]}
+
+    buckets = []
+    model_set = set()
+    for r in rows:
+        hour, model, reqs = r
+        model_set.add(model)
+        buckets.append({
+            "hour": hour.isoformat() if hour else None,
+            "model": model,
+            "requests": reqs,
+        })
+    return {"buckets": buckets, "models": sorted(model_set)}
+
+
+@app.get("/api/dashboard/key-aliases")
+def dashboard_key_aliases():
+    """Alle bekannten Key-Aliase aus SpendLogs + VerificationToken."""
+    try:
+        conn = _db()
+        cur = conn.cursor()
+        cur.execute("""
+            SELECT DISTINCT COALESCE(vt.key_alias, 'unbekannt') AS alias
+            FROM "LiteLLM_SpendLogs" sl
+            LEFT JOIN "LiteLLM_VerificationToken" vt ON sl.api_key = vt.token
+            ORDER BY alias
+        """)
+        rows = cur.fetchall()
+        cur.close(); conn.close()
+    except Exception as e:
+        return {"aliases": [], "error": str(e)[:200]}
+
+    return {"aliases": [r[0] for r in rows]}
