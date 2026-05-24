@@ -1,9 +1,10 @@
-"""Rose LiteLLM Admin — kleine lokale UI zur Key-Verwaltung + Status.
+"""Rose LiteLLM Admin — lokale UI zur Key-Verwaltung + Status + Dashboard.
 
 NUR LAN-ZUGRIFF (Port 4001 an LAN-IP gebunden).
 
 Keys werden direkt aus der LiteLLM-DB gelesen (LiteLLM_VerificationToken).
 Create/Delete laufen ueber LiteLLMs REST-API.
+Dashboard aggregiert SpendLogs aus der gleichen DB.
 """
 from __future__ import annotations
 
@@ -42,6 +43,11 @@ def _db():
 @app.get("/", include_in_schema=False)
 def root():
     return FileResponse(STATIC_DIR / "index.html")
+
+
+@app.get("/dashboard", include_in_schema=False)
+def dashboard_page():
+    return FileResponse(STATIC_DIR / "dashboard.html")
 
 
 @app.get("/api/status")
@@ -143,3 +149,114 @@ async def delete_key(body: dict):
         except httpx.HTTPError as e:
             raise HTTPException(502, f"litellm_unreachable: {e}")
     return {"status_code": r.status_code, "body": r.text[:200]}
+
+
+# ─── Dashboard ────────────────────────────────────────────────────
+
+@app.get("/api/dashboard/today")
+def dashboard_today():
+    """Heutige Nutzung aggregiert pro Modell aus LiteLLM_SpendLogs."""
+    try:
+        conn = _db()
+        cur = conn.cursor()
+        cur.execute("""
+            SELECT model,
+                   COUNT(*)::int AS requests,
+                   COALESCE(SUM(prompt_tokens), 0)::bigint AS prompt_tokens,
+                   COALESCE(SUM(completion_tokens), 0)::bigint AS completion_tokens,
+                   COALESCE(SUM(spend), 0)::float AS spend,
+                   MAX("startTime") AS last_request_at,
+                   BOOL_OR("startTime" > NOW() - INTERVAL '10 minutes') AS active_last_10min
+            FROM "LiteLLM_SpendLogs"
+            WHERE "startTime" >= CURRENT_DATE
+            GROUP BY model
+            ORDER BY requests DESC
+        """)
+        rows = cur.fetchall()
+        cur.close(); conn.close()
+    except Exception as e:
+        return {"models": [], "total_requests": 0, "error": str(e)[:200]}
+
+    models = []
+    total_requests = 0
+    for r in rows:
+        model, reqs, pt, ct, spend, last_req, active = r
+        total_requests += reqs
+        models.append({
+            "model": model,
+            "requests": reqs,
+            "prompt_tokens": pt,
+            "completion_tokens": ct,
+            "spend": round(spend, 6),
+            "last_request_at": last_req.isoformat() if last_req else None,
+            "active_last_10min": bool(active),
+        })
+    return {"models": models, "total_requests": total_requests}
+
+
+@app.get("/api/dashboard/recent")
+def dashboard_recent():
+    """Letzte 20 Requests aus LiteLLM_SpendLogs."""
+    try:
+        conn = _db()
+        cur = conn.cursor()
+        cur.execute("""
+            SELECT sl."request_id", sl.model, vt.key_alias,
+                   sl.prompt_tokens, sl.completion_tokens, sl.spend,
+                   sl.status, sl."startTime",
+                   EXTRACT(EPOCH FROM (sl."endTime" - sl."startTime")) * 1000 AS duration_ms
+            FROM "LiteLLM_SpendLogs" sl
+            LEFT JOIN "LiteLLM_VerificationToken" vt ON sl.api_key = vt.token
+            ORDER BY sl."startTime" DESC
+            LIMIT 20
+        """)
+        rows = cur.fetchall()
+        cur.close(); conn.close()
+    except Exception as e:
+        return {"requests": [], "error": str(e)[:200]}
+
+    requests = []
+    for r in rows:
+        rid, model, alias, pt, ct, spend, status, start, dur = r
+        requests.append({
+            "request_id": rid,
+            "model": model,
+            "key_alias": alias or "—",
+            "prompt_tokens": pt or 0,
+            "completion_tokens": ct or 0,
+            "spend": round(float(spend), 6) if spend else 0,
+            "status": status or "unknown",
+            "startTime": start.isoformat() if start else None,
+            "duration_ms": round(float(dur)) if dur else None,
+        })
+    return {"requests": requests}
+
+
+@app.get("/api/dashboard/health")
+def dashboard_health():
+    """Schnell-Check: welche Modelle hatten in den letzten 10 Min Traffic."""
+    try:
+        conn = _db()
+        cur = conn.cursor()
+        cur.execute("""
+            SELECT model, COUNT(*)::int AS requests,
+                   MAX("startTime") AS last_request_at
+            FROM "LiteLLM_SpendLogs"
+            WHERE "startTime" > NOW() - INTERVAL '10 minutes'
+            GROUP BY model
+            ORDER BY requests DESC
+        """)
+        rows = cur.fetchall()
+        cur.close(); conn.close()
+    except Exception as e:
+        return {"active_models": [], "error": str(e)[:200]}
+
+    active_models = []
+    for r in rows:
+        model, reqs, last_req = r
+        active_models.append({
+            "model": model,
+            "requests": reqs,
+            "last_request_at": last_req.isoformat() if last_req else None,
+        })
+    return {"active_models": active_models}

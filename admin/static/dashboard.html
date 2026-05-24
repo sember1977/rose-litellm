@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Rose LiteLLM Dashboard</title>
+<link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+<header>
+  <h1>Rose LiteLLM Admin</h1>
+  <p class="sub">Lokale Verwaltung · Nur im LAN erreichbar</p>
+  <nav class="tabs">
+    <a href="/">Keys &amp; Status</a>
+    <a href="/dashboard" class="active">Dashboard</a>
+  </nav>
+</header>
+
+<main>
+
+<section class="card">
+  <h2>Heute — Nutzung pro Modell</h2>
+  <p class="hint" id="today-date">—</p>
+  <div class="table-wrap">
+    <table id="today-table">
+      <thead>
+        <tr>
+          <th>Aktiv</th>
+          <th>Modell</th>
+          <th>Requests</th>
+          <th>Input-Tokens</th>
+          <th>Output-Tokens</th>
+          <th>Kosten</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td colspan="6" class="muted">Lade Daten…</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p id="today-total" class="hint" style="margin-top:10px;"></p>
+  <p id="today-error" class="warn hidden"></p>
+</section>
+
+<section class="card">
+  <h2>Letzte Requests</h2>
+  <div class="table-wrap">
+    <table id="recent-table">
+      <thead>
+        <tr>
+          <th>Zeit</th>
+          <th>Modell</th>
+          <th>Key</th>
+          <th>Input</th>
+          <th>Output</th>
+          <th>Dauer</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td colspan="7" class="muted">Lade Daten…</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p id="recent-error" class="warn hidden"></p>
+</section>
+
+</main>
+
+<footer>
+  <p>Rose LiteLLM Admin · Nur LAN · <a href="https://github.com/BerriAI/litellm" target="_blank">LiteLLM Docs</a></p>
+</footer>
+
+<script src="/static/dashboard.js"></script>
+</body>
+</html>
