@@ -1,5 +1,37 @@
 # Changelog
 
+## 0.8.0 — Per-Key Prompt-Logging (Admin-Tab Prompt-Logs)
+
+**Warum:** SpendLogs zeigen nur Metadaten (Tokens, Kosten, Status). Um zu sehen
+*welche* Prompts ein bestimmter Key tatsaechlich stellt — z.B. um ein neues
+Kollegen-Setup zu pruefen oder einen Bug nachzuvollziehen — fehlt ein Plaintext-
+Log. Globales Prompt-Logging waere datenschutz- und ressourcen-teuer. Loesung:
+genau ein Key zur Zeit, opt-in, ueber Web-UI ein-/ausschaltbar.
+
+**Geaendert:**
+- `litellm_config.yaml`: `callbacks: custom_loggers.active_key_logger.active_key_logger_instance`
+- `docker-compose.yml`: neues Volume `litellm-logs` (shared zwischen `rose-litellm`
+  und `rose-litellm-admin`), `custom_loggers/`-Mount im litellm-Container,
+  `KEY_LOG_ROOT=/data` + `PYTHONPATH=/app:/app/custom_loggers`.
+- `admin/app.py`: neue Endpoints `/api/logs/active` (GET/POST), `/api/logs/list`,
+  `/api/logs/stream` (SSE Live-Feed), Route `/logs`.
+- `admin/static/index.html` + `dashboard.html`: Nav-Tab "Prompt-Logs".
+
+**Neu:**
+- `custom_loggers/active_key_logger.py`: LiteLLM-CustomLogger, liest `/data/active_key.txt`
+  bei jedem Call. Leerer Inhalt = Logging aus. Nur Calls deren `user_api_key_alias`
+  matched landen in `/data/logs/{alias}-{YYYY-MM-DD}.jsonl` (Tagesrotation, UTC).
+- `admin/static/logs.html` + `logs.js`: Dropdown zur Key-Auswahl, Status-Pill
+  Aktiv/Aus, Live-Feed-Tabelle (Zeit/Modell/IP/Prompt-Excerpt/Response-Excerpt/
+  Tokens/Dauer), Detail-Modal pro Eintrag mit vollem Messages-Array.
+
+**Sicherheit/Datenschutz:**
+- Default = aus. Logging ist explizit opt-in pro Key.
+- Logs liegen plaintext auf dem Spark in `/var/lib/docker/volumes/rose-litellm_litellm-logs/_data/logs/`.
+- Admin-UI ist nur LAN-erreichbar (192.168.1.155:4001) — keine externe Exposition.
+- Andere Keys werden vom Logger bereits am ersten File-Read-Vergleich verworfen
+  (~1 ms Overhead pro Call wenn aus, sonst ~5 ms).
+
 ## 0.7.2 — Dashboard: Chart + Filter
 
 **Warum:** Ohne zeitlichen Verlauf und Key-Filter ist das Dashboard nur eine

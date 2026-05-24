@@ -47,7 +47,7 @@ Internet
 **Container im Compose (`/home/sember/rose-litellm/docker-compose.yml`):**
 - `rose-litellm-db` — eigener Postgres (Volume `litellm_pgdata`)
 - `rose-litellm` — LiteLLM Proxy (Port 4000 extern via Caddy)
-- `rose-litellm-admin` — Key-/Status-UI (LAN-only)
+- `rose-litellm-admin` — Key-/Status-/Dashboard-/Prompt-Logs-UI (LAN-only)
 
 **Geteilte Backends (laufen NICHT in diesem Compose):**
 - `rose-vllm-next`, `rose-vllm-embed` — eigene Compose-Dateien
