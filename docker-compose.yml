@@ -23,7 +23,11 @@ services:
       - "4000:4000"
     volumes:
       - ./litellm_config.yaml:/app/config.yaml:ro
+      - ./custom_loggers:/app/custom_loggers:ro
+      - litellm-logs:/data
     environment:
+      - PYTHONPATH=/app:/app/custom_loggers
+      - KEY_LOG_ROOT=/data
       - LITELLM_MASTER_KEY=${MASTER_KEY}
       - LITELLM_SALT_KEY=${SALT_KEY}
       - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
@@ -46,7 +50,10 @@ services:
     restart: unless-stopped
     ports:
       - "192.168.1.155:4001:4001"
+    volumes:
+      - litellm-logs:/data
     environment:
+      - KEY_LOG_ROOT=/data
       - LITELLM_URL=http://litellm:4000
       - LITELLM_MASTER_KEY=${MASTER_KEY}
       - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
@@ -56,3 +63,4 @@ services:
 
 volumes:
   litellm_pgdata:
+  litellm-logs:

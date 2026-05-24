@@ -1,4 +1,20 @@
 model_list:
+  # Qwen2.5-VL-7B-AWQ lokal — Vision-Modell fuer docscan-Klassifizierung
+  - model_name: qwen2.5-vl
+    litellm_params:
+      model: openai/qwen2.5-vl
+      api_base: http://192.168.1.155:8015/v1
+      api_key: dummy-vllm-no-auth
+    model_info:
+      mode: chat
+      supports_vision: true
+      supports_function_calling: false
+      supports_response_schema: false
+      max_tokens: 8192
+      max_input_tokens: 8192
+      max_output_tokens: 2048
+      input_cost_per_token: 0.0
+      output_cost_per_token: 0.0
   # qwen3.6 ohne Thinking — schnelle Antworten (Default fuer alle Tools)
   - model_name: qwen3.6
     litellm_params:
@@ -239,6 +255,7 @@ litellm_settings:
   drop_params: true
   num_retries: 2
   request_timeout: 300
+  callbacks: custom_loggers.active_key_logger.active_key_logger_instance
 
 general_settings:
   master_key: os.environ/LITELLM_MASTER_KEY

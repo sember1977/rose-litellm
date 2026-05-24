@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Rose LiteLLM Logs</title>
+<link rel="stylesheet" href="/static/style.css" />
+<style>
+  .logs-bar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+    margin-bottom: 12px;
+  }
+  .logs-bar select {
+    background: rgba(0,0,0,0.3);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 6px 10px;
+    border-radius: 5px;
+    font-size: 13px;
+    min-width: 220px;
+  }
+  .pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 12px;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid var(--border);
+    color: var(--muted);
+  }
+  .pill.on { color: var(--good); border-color: rgba(74,222,128,0.35); }
+  .pill.off { color: var(--muted); }
+  .pill .dot { width: 8px; height: 8px; border-radius: 50%; background: currentColor; }
+  .danger {
+    background: var(--bad);
+    color: #000;
+  }
+  .danger:hover { background: #e15a5a; }
+  table.logs {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+  }
+  table.logs th, table.logs td {
+    padding: 8px 10px;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+  }
+  table.logs th {
+    color: var(--muted);
+    font-weight: 600;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  table.logs tbody tr { cursor: pointer; }
+  table.logs tbody tr:hover { background: rgba(183,148,246,0.06); }
+  td.excerpt {
+    max-width: 280px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  td.mono { font-family: ui-monospace, "SF Mono", Consolas, monospace; }
+  .modal-bg {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.7);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+    padding: 20px;
+  }
+  .modal-bg.show { display: flex; }
+  .modal {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    max-width: 900px;
+    width: 100%;
+    max-height: 90vh;
+    overflow-y: auto;
+    padding: 20px 24px;
+  }
+  .modal h3 { margin: 0 0 12px; font-size: 15px; }
+  .modal .meta {
+    font-size: 12px;
+    color: var(--muted);
+    margin-bottom: 12px;
+  }
+  .modal pre {
+    background: rgba(0,0,0,0.3);
+    max-height: 50vh;
+    overflow-y: auto;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+  .modal .close-btn {
+    float: right;
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--muted);
+  }
+  .auto-scroll-label {
+    font-size: 12px;
+    color: var(--muted);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+</style>
+</head>
+<body>
+<header>
+  <h1>Rose LiteLLM Admin</h1>
+  <p class="sub">Lokale Verwaltung · Nur im LAN erreichbar</p>
+  <nav class="tabs">
+    <a href="/">Keys &amp; Status</a>
+    <a href="/dashboard">Dashboard</a>
+    <a href="/logs" class="active">Prompt-Logs</a>
+  </nav>
+</header>
+
+<main>
+
+<section class="card">
+  <h2>Aktiver Logging-Key</h2>
+  <p class="hint">
+    Nur Calls genau dieses Keys werden in eine JSONL-Datei geschrieben (alle Prompts + Responses, plaintext).
+    Kein Key ausgewaehlt = Logging vollstaendig aus. Bestehende SpendLogs sind davon nicht betroffen.
+  </p>
+  <div class="logs-bar">
+    <select id="key-select">
+      <option value="">— kein Key (Logging aus) —</option>
+    </select>
+    <button id="apply-btn">Setzen</button>
+    <button id="stop-btn" class="danger">Stoppen</button>
+    <span id="status-pill" class="pill off"><span class="dot"></span><span id="status-text">laedt…</span></span>
+  </div>
+  <p class="hint" id="logfile-hint">—</p>
+</section>
+
+<section class="card">
+  <h2>Live-Feed</h2>
+  <div class="logs-bar">
+    <label class="auto-scroll-label">
+      <input type="checkbox" id="auto-scroll" checked />
+      Auto-Scroll (neueste oben)
+    </label>
+    <span class="pill" id="count-pill">0 Eintraege</span>
+  </div>
+  <div class="table-wrap">
+    <table class="logs">
+      <thead>
+        <tr>
+          <th>Zeit (UTC)</th>
+          <th>Modell</th>
+          <th>IP</th>
+          <th>Prompt (Auszug)</th>
+          <th>Response (Auszug)</th>
+          <th>Tokens</th>
+          <th>ms</th>
+        </tr>
+      </thead>
+      <tbody id="logs-tbody">
+        <tr><td colspan="7" class="muted">Warte auf Eintraege…</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+</main>
+
+<div class="modal-bg" id="modal-bg">
+  <div class="modal">
+    <button class="close-btn" id="modal-close">schliessen</button>
+    <h3 id="modal-title">Eintrag</h3>
+    <div class="meta" id="modal-meta">—</div>
+    <h4 style="margin:14px 0 6px; font-size:13px;">Messages</h4>
+    <pre id="modal-messages">—</pre>
+    <h4 style="margin:14px 0 6px; font-size:13px;">Response</h4>
+    <pre id="modal-response">—</pre>
+  </div>
+</div>
+
+<footer>
+  <p>Rose LiteLLM Admin · Nur LAN</p>
+</footer>
+
+<script src="/static/logs.js"></script>
+</body>
+</html>

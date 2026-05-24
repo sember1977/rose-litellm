@@ -344,3 +344,198 @@ def dashboard_key_aliases():
         return {"aliases": [], "error": str(e)[:200]}
 
     return {"aliases": [r[0] for r in rows]}
+# ─── Prompt-Logs (Per-Key Live-Feed) ─────────────────────────────
+# Aktiver Alias steht in /data/active_key.txt (shared volume mit rose-litellm-Container).
+# JSONL-Tageslogs in /data/logs/{alias}-{YYYY-MM-DD}.jsonl.
+
+import asyncio
+import json as _json
+from datetime import datetime, timezone, timedelta
+from fastapi import Request
+from fastapi.responses import StreamingResponse
+
+LOGS_ROOT = Path(os.environ.get("KEY_LOG_ROOT", "/data"))
+LOGS_ACTIVE_FILE = LOGS_ROOT / "active_key.txt"
+LOGS_DIR = LOGS_ROOT / "logs"
+
+
+def _logs_safe_alias(alias: str) -> str:
+    return "".join(c if c.isalnum() or c in "-_." else "_" for c in alias) or "unknown"
+
+
+def _logs_read_active() -> str:
+    try:
+        return LOGS_ACTIVE_FILE.read_text(encoding="utf-8").strip()
+    except FileNotFoundError:
+        return ""
+    except Exception:
+        return ""
+
+
+def _logs_write_active(alias: str) -> None:
+    LOGS_ROOT.mkdir(parents=True, exist_ok=True)
+    LOGS_ACTIVE_FILE.write_text(alias or "", encoding="utf-8")
+
+
+def _logs_files_for(alias: str, days: int = 2) -> list[Path]:
+    """Heutige + (days-1) vorherige Dateien fuer den Alias, neueste zuerst."""
+    if not alias:
+        return []
+    safe = _logs_safe_alias(alias)
+    out: list[Path] = []
+    today = datetime.now(timezone.utc).date()
+    for i in range(days):
+        d = today - timedelta(days=i)
+        p = LOGS_DIR / f"{safe}-{d.isoformat()}.jsonl"
+        if p.exists():
+            out.append(p)
+    return out
+
+
+def _logs_read_lines(alias: str, limit: int = 100) -> list[dict]:
+    """Liest die letzten N Eintraege fuer den Alias (heutige + gestrige Datei)."""
+    files = _logs_files_for(alias, days=2)
+    entries: list[dict] = []
+    for p in files:
+        try:
+            with p.open("r", encoding="utf-8") as fh:
+                for line in fh:
+                    line = line.strip()
+                    if not line:
+                        continue
+                    try:
+                        entries.append(_json.loads(line))
+                    except Exception:
+                        continue
+        except Exception:
+            continue
+    # Neueste zuerst
+    entries.reverse()
+    return entries[:limit]
+
+
+@app.get("/logs", include_in_schema=False)
+def logs_page():
+    return FileResponse(STATIC_DIR / "logs.html")
+
+
+@app.get("/api/logs/active")
+def logs_get_active():
+    alias = _logs_read_active()
+    safe = _logs_safe_alias(alias) if alias else ""
+    today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    return {
+        "alias": alias,
+        "logfile": f"{safe}-{today}.jsonl" if alias else None,
+    }
+
+
+@app.post("/api/logs/active")
+def logs_set_active(body: dict):
+    alias = (body.get("alias") or "").strip()
+    # Optional: pruefen ob der Alias bei LiteLLM bekannt ist — wir verzichten,
+    # damit ein Stopp (leerer String) immer durchgeht.
+    _logs_write_active(alias)
+    return {"ok": True, "alias": alias}
+
+
+@app.get("/api/logs/list")
+def logs_list(limit: int = 50):
+    alias = _logs_read_active()
+    if not alias:
+        return {"alias": "", "entries": []}
+    if limit < 1 or limit > 500:
+        limit = 50
+    return {"alias": alias, "entries": _logs_read_lines(alias, limit=limit)}
+
+
+@app.get("/api/logs/stream")
+async def logs_stream(request: Request):
+    """SSE — pollt mtime der heutigen Datei, streamt neue Zeilen + Aktiv-Wechsel."""
+    async def event_gen():
+        last_alias = _logs_read_active()
+        last_size = 0
+        last_path: Path | None = None
+
+        def _today_path(alias: str) -> Path | None:
+            if not alias:
+                return None
+            safe = _logs_safe_alias(alias)
+            today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+            return LOGS_DIR / f"{safe}-{today}.jsonl"
+
+        # Init
+        last_path = _today_path(last_alias)
+        if last_path and last_path.exists():
+            last_size = last_path.stat().st_size
+
+        # Initial status push
+        yield f"event: active\ndata: {_json.dumps({'alias': last_alias})}\n\n"
+
+        while True:
+            if await request.is_disconnected():
+                break
+
+            current_alias = _logs_read_active()
+            if current_alias != last_alias:
+                last_alias = current_alias
+                last_path = _today_path(last_alias)
+                last_size = last_path.stat().st_size if (last_path and last_path.exists()) else 0
+                yield f"event: active\ndata: {_json.dumps({'alias': last_alias})}\n\n"
+
+            # Logging aus? Nur Heartbeat
+            if not last_alias or not last_path:
+                yield ": ping\n\n"
+                await asyncio.sleep(2.0)
+                continue
+
+            # Datei evtl. neu (Tageswechsel)
+            if not last_path.exists():
+                last_path = _today_path(last_alias)
+                last_size = 0
+                if not last_path or not last_path.exists():
+                    yield ": ping\n\n"
+                    await asyncio.sleep(2.0)
+                    continue
+
+            try:
+                cur_size = last_path.stat().st_size
+            except FileNotFoundError:
+                last_size = 0
+                yield ": ping\n\n"
+                await asyncio.sleep(2.0)
+                continue
+
+            if cur_size > last_size:
+                try:
+                    with last_path.open("r", encoding="utf-8") as fh:
+                        fh.seek(last_size)
+                        new_text = fh.read()
+                        last_size = fh.tell()
+                except Exception:
+                    new_text = ""
+                for line in new_text.splitlines():
+                    line = line.strip()
+                    if not line:
+                        continue
+                    try:
+                        obj = _json.loads(line)
+                    except Exception:
+                        continue
+                    yield f"event: entry\ndata: {_json.dumps(obj, default=str)}\n\n"
+            elif cur_size < last_size:
+                # Datei wurde rotiert/getrimmt — reset
+                last_size = 0
+            else:
+                yield ": ping\n\n"
+
+            await asyncio.sleep(1.5)
+
+    return StreamingResponse(
+        event_gen(),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "X-Accel-Buffering": "no",
+        },
+    )
