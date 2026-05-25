@@ -1,8 +1,28 @@
 model_list:
-  # Qwen2.5-VL-7B-AWQ lokal — Vision-Modell fuer docscan-Klassifizierung
+  # Qwen3-VL-8B-Instruct-FP8 lokal (v0.40.0 in rose-spark) - Vision-Modell fuer docscan-Klassifizierung
+  # 256K Context, OCR 32 Sprachen, verbesserte Spatial-Perception
+  - model_name: qwen3-vl-8b
+    litellm_params:
+      model: openai/qwen3-vl-8b
+      api_base: http://192.168.1.155:8015/v1
+      api_key: dummy-vllm-no-auth
+    model_info:
+      mode: chat
+      supports_vision: true
+      supports_function_calling: false
+      supports_response_schema: false
+      max_tokens: 8192
+      max_input_tokens: 8192
+      max_output_tokens: 2048
+      input_cost_per_token: 0.0
+      output_cost_per_token: 0.0
+
+  # Backward-Compat-Alias: existierende User mit docscan_model="qwen2.5-vl"
+  # werden auf qwen3-vl-8b umgeleitet (Migration 026 in rose-spark migriert
+  # User-Defaults parallel — Alias deckt edge-cases ab)
   - model_name: qwen2.5-vl
     litellm_params:
-      model: openai/qwen2.5-vl
+      model: openai/qwen3-vl-8b
       api_base: http://192.168.1.155:8015/v1
       api_key: dummy-vllm-no-auth
     model_info:
