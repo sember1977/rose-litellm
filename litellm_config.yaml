@@ -159,27 +159,6 @@ model_list:
       input_cost_per_token: 0.0
       output_cost_per_token: 0.0
 
-  # ============================================================
-  # chemicals-ionos: RAG-Backpack auf eigenstaendigem ionos-rag-svc
-  # (Server 217.154.89.179:8080, pgvector+bge-m3+Llama405B in IONOS Cloud).
-  # 2170 Chunks aus chem_examples+chem_regulations. v0.1.0 Backpack chemicals.
-  # Repo: github.com/sember1977/ionos-rag-svc
-  # ============================================================
-  - model_name: chemicals-ionos
-    litellm_params:
-      model: openai/chemicals
-      api_base: http://217.154.89.179:8080/v1
-      api_key: os.environ/IONOS_RAG_PUBLIC_KEY
-    model_info:
-      mode: chat
-      supports_function_calling: false
-      supports_system_messages: true
-      max_tokens: 8192
-      max_input_tokens: 32768
-      max_output_tokens: 8192
-      input_cost_per_token: 0.0
-      output_cost_per_token: 0.0
-
 litellm_settings:
   drop_params: true
   num_retries: 2
