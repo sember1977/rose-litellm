@@ -166,47 +166,6 @@ model_list:
   # qwen-chemicals: RAG-Wrapper vor qwen3-next, Korpus Gefahrstoffe/EMKG
   # Service-Code: github.com/sember1977/chemicals-rag-svc
   # ============================================================
-  - model_name: qwen-chemicals
-    litellm_params:
-      model: openai/qwen-chemicals
-      api_base: http://chemicals-rag-svc:8021/v1
-      api_key: dummy
-    model_info:
-      mode: chat
-      supports_function_calling: true
-      supports_tool_choice: true
-      supports_system_messages: true
-      supports_response_schema: true
-      max_tokens: 32768
-      max_input_tokens: 32768
-      max_output_tokens: 8192
-      input_cost_per_token: 0.0
-      output_cost_per_token: 0.0
-
-  # ============================================================
-  # llama405B-Chemicals: gleicher RAG-Code, aber IONOS Llama 3.1 405B
-  # als Generation-Backend. Parallel-Variante zu qwen-chemicals fuer
-  # A/B-Vergleich der Antwort-Qualitaet.
-  # ============================================================
-  - model_name: llama405B-Chemicals
-    litellm_params:
-      model: openai/llama405B-Chemicals
-      api_base: http://chemicals-rag-svc-llama:8021/v1
-      api_key: dummy
-    model_info:
-      mode: chat
-      supports_function_calling: false
-      supports_system_messages: true
-      max_tokens: 8192
-      max_input_tokens: 32768
-      max_output_tokens: 8192
-      input_cost_per_token: 0.0
-      output_cost_per_token: 0.0
-
-  # ============================================================
-  # deepseek-flash-Chemicals: gleicher RAG-Code, DeepSeek V4-Flash
-  # als Generation-Backend (China-Host, NICHT fuer Kunden-IP).
-  # ============================================================
   - model_name: deepseek-flash-Chemicals
     litellm_params:
       model: openai/deepseek-flash-Chemicals
