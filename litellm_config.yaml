@@ -17,24 +17,6 @@ model_list:
       input_cost_per_token: 0.0
       output_cost_per_token: 0.0
 
-  # Backward-Compat-Alias: existierende User mit docscan_model="qwen2.5-vl"
-  # werden auf qwen3-vl-8b umgeleitet (Migration 026 in rose-spark migriert
-  # User-Defaults parallel — Alias deckt edge-cases ab)
-  - model_name: qwen2.5-vl
-    litellm_params:
-      model: openai/qwen3-vl-8b
-      api_base: http://192.168.1.155:8015/v1
-      api_key: dummy-vllm-no-auth
-    model_info:
-      mode: chat
-      supports_vision: true
-      supports_function_calling: false
-      supports_response_schema: false
-      max_tokens: 8192
-      max_input_tokens: 8192
-      max_output_tokens: 2048
-      input_cost_per_token: 0.0
-      output_cost_per_token: 0.0
   # qwen3.6 ohne Thinking — schnelle Antworten (Default fuer alle Tools)
   - model_name: qwen3.6
     litellm_params:
@@ -176,34 +158,6 @@ model_list:
       max_output_tokens: 8192
       input_cost_per_token: 0.0
       output_cost_per_token: 0.0
-
-  # ============================================================
-  # IONOS AI Model Hub - DSGVO-konformer DE-Host (Frankfurt)
-  # Endpoint: https://openai.inference.de-txl.ionos.com/v1
-  # Function-Calling-Support unbestaetigt -> erst false, nach Smoke-Test ggf. anheben
-  # ============================================================
-  - model_name: ionos-llama405b
-    litellm_params:
-      model: openai/meta-llama/Meta-Llama-3.1-405B-Instruct-FP8
-      api_base: https://openai.inference.de-txl.ionos.com/v1
-      api_key: os.environ/IONOS_API_KEY
-      temperature: 0
-      top_p: 0.1
-      # IONOS hostet Llama 3.1 ohne korrekt verdrahtete EOT-Token --
-      # Modell labert sonst "assistant\n\n..." weiter. Stop-Sequenzen
-      # zwingen den Schnitt vor dem naechsten Header.
-      stop:
-        - "<|eot_id|>"
-        - "<|end_of_text|>"
-        - "<|start_header_id|>"
-        - "assistant\n\n"
-    model_info:
-      mode: chat
-      supports_function_calling: false
-      supports_system_messages: true
-      max_tokens: 8192
-      max_input_tokens: 32768
-      max_output_tokens: 8192
 
   # ============================================================
   # chemicals-ionos: RAG-Backpack auf eigenstaendigem ionos-rag-svc
