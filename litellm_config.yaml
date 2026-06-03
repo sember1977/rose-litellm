@@ -162,10 +162,6 @@ model_list:
       output_cost_per_token: 0.00000028
 
 
-  # ============================================================
-  # qwen-chemicals: RAG-Wrapper vor qwen3-next, Korpus Gefahrstoffe/EMKG
-  # Service-Code: github.com/sember1977/chemicals-rag-svc
-  # ============================================================
   - model_name: deepseek-flash-Chemicals
     litellm_params:
       model: openai/deepseek-flash-Chemicals
