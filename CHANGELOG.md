@@ -1,5 +1,36 @@
 # Changelog
 
+## 0.9.0 — Modell-Landschaft bereinigt (Chemicals / IONOS / Alias entfernt)
+
+**Warum:** Mehrere Modelle wurden nicht mehr gebraucht oder waren nicht mehr erreichbar und
+verstopften die Modellauswahl in den PWAs (teils zeigten sie ins Leere): die Chemicals-RAG-
+Backpacks, der externe IONOS-RAG, das Cloud-Modell Llama-405B und ein toter Vision-Alias.
+
+**Entfernt** (aus `litellm_config.yaml` `model_list`):
+- `qwen-chemicals`, `llama405B-Chemicals` — Chemicals-RAG-Backpacks
+- `ionos-llama405b` — IONOS-Cloud Llama 3.1 405B
+- `chemicals-ionos` — externer `ionos-rag-svc` (Host `217.154.89.179` nicht mehr erreichbar)
+- `qwen2.5-vl` — Backward-Compat-Alias auf `qwen3-vl-8b` (kein eigener Prozess)
+
+→ verbleibend: `qwen3-vl-8b`, `qwen3.6`, `qwen3.6-vibe`, `nomic-embed`, `gemini-pro-latest`,
+`gemini-flash-latest`, `deepseek-v4-pro`, `deepseek-v4-flash`, `deepseek-flash-Chemicals`.
+
+**Geaendert:**
+- DB: Key-Allowlists (`LiteLLM_VerificationToken.models`) von allen toten Modell-Namen
+  bereinigt (Keys `Rosespark`, `chemicals-rag-svc`, `rose-vibe`, `pth`, `TIM`, `rosevibe`).
+  Der `chemicals-rag-svc`-Key generiert dadurch über `deepseek-v4-flash` / `gemini-flash-latest`
+  statt über das entfernte `ionos-llama405b`.
+- `README.md`: Modell-Tabelle + Architektur-Diagramm aktualisiert (`qwen3-vl-8b` ergaenzt,
+  Chemicals-Eintrag auf `deepseek-flash-Chemicals` umgestellt).
+
+**Lehre:**
+- `/v1/models` filtert **pro API-Key** über dessen `models`-Allowlist. Ein Modell nur aus der
+  Config zu nehmen reicht NICHT — jede Key-Allowlist muss separat bereinigt werden, sonst
+  zeigen die Key-Verbraucher (z.B. PWA-Dropdowns) das tote Modell weiter.
+- Config-Änderungen greifen erst nach `docker compose up -d --force-recreate litellm`;
+  ein blosses `docker compose restart` lädt die geänderte Config NICHT zuverlässig neu.
+
+
 ## 0.8.0 — Per-Key Prompt-Logging (Admin-Tab Prompt-Logs)
 
 **Warum:** SpendLogs zeigen nur Metadaten (Tokens, Kosten, Status). Um zu sehen

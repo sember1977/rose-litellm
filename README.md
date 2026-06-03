@@ -35,7 +35,7 @@ Internet
               +-----> rose-vllm-embed  :8013  (nomic-embed-text-v1.5)
               +-----> Cloud:  Gemini API, DeepSeek API
               |
-              +-----> chemicals-rag-svc :8021 (RAG-Wrapper -> qwen-chemicals)
+              +-----> chemicals-rag-svc :8021 (RAG-Wrapper -> deepseek-flash-Chemicals)
 
 +--------------------+
 | rose-litellm-admin |  LAN-only (192.168.1.155:4001)
@@ -52,7 +52,7 @@ Internet
 **Geteilte Backends (laufen NICHT in diesem Compose):**
 - `rose-vllm-next`, `rose-vllm-embed` — eigene Compose-Dateien
 - `rose-qdrant` — Vector-Store (gemeinsam genutzt)
-- `chemicals-rag-svc` — RAG-Service fuer Gefahrstoff-Domain (eigenes Repo: https://github.com/sember1977/chemicals-rag-svc), exponiert das Modell `qwen-chemicals`
+- `chemicals-rag-svc` — RAG-Service fuer Gefahrstoff-Domain (eigenes Repo: https://github.com/sember1977/chemicals-rag-svc), exponiert das Modell `deepseek-flash-Chemicals`
 
 ---
 
@@ -62,12 +62,13 @@ Internet
 |---|---|---|
 | `qwen3.6` | vLLM `qwen3-next` (Qwen3-Next-80B-A3B-Instruct-AWQ-4bit) | General-Chat, Tool-Use, 256k Context |
 | `qwen3.6-vibe` | vLLM `qwen3-next` | Gleiche Engine, fuer Rose-Vibe-spezifischen System-Prompt reserviert |
+| `qwen3-vl-8b` | vLLM `qwen3-vl-8b` (:8015, rose-vllm-vision) | Lokales Vision-Modell (DocScan, Chat-Bilder), OCR |
 | `nomic-embed` | vLLM `nomic-embed` (nomic-embed-text-v1.5) | Embeddings, 768-dim |
 | `gemini-pro-latest` | Google Gemini Pro | Groesseres Reasoning, 1M context |
 | `gemini-flash-latest` | Google Gemini Flash | Schnell + guenstig + Vision |
 | `deepseek-v4-pro` | DeepSeek V4-Pro | Hoechster Agentic-Score, 1M context |
 | `deepseek-v4-flash` | DeepSeek V4-Flash | Schnell + guenstig fuer Routine |
-| `qwen-chemicals` | RAG-Wrapper vor `qwen3-next` | Gefahrstoff-Betriebsanweisungen + EMKG-Bewertung (siehe `chemicals-rag-svc`) |
+| `deepseek-flash-Chemicals` | RAG-Wrapper (chemicals-rag-svc, lokal) | Gefahrstoff-Betriebsanweisungen + EMKG-Bewertung |
 
 Capabilities (Vision/Function-Calling/Reasoning) und Token-Limits stehen pro
 Modell in `litellm_config.yaml` unter `model_info`. Verifikation:
