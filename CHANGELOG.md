@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.10.0 — Modellwechsel: gemma-4-Familie ersetzt qwen3.6 (24.07.2026)
+
+**Warum:** Spark-weiter Wechsel des lokalen Hauptmodells auf google/gemma-4-31B-it
+(Begruendung/Belege: rose-spark v0.99.0). Der Backend-Server heisst jetzt ehrlich
+`gemma-4-31b` (vllm/vllm-openai:latest, Tool-Parser gemma4, Port 8014 unveraendert).
+
+- NEU: gemma-4-31b, gemma-4-31b-vibe (lokales Hauptmodell, Tool-faehig),
+  gemma-gaia (Stimme der Erde via gaia-api), gemma-arbeitsschutz (as-rag-Backbone lokal).
+- ENTFERNT: qwen3.6, qwen3.6-vibe, qwen-gaia, qwen-arbeitsschutz.
+- Unveraendert: qwen3-vl-8b (Vision, bewusst behalten), nomic-embed, gemini-*, deepseek-*.
+- Keys (Rosespark, gaia-helloplanet) auf die neuen Modelllisten aktualisiert.
+
+
 ## 0.9.0 — Modell-Landschaft bereinigt (Chemicals / IONOS / Alias entfernt)
 
 **Warum:** Mehrere Modelle wurden nicht mehr gebraucht oder waren nicht mehr erreichbar und
